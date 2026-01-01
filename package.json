@@ -2,7 +2,7 @@
   "name": "@oneirosoft/quiddity",
   "repository": {
     "type": "git",
-    "url": "https://github.com/quiddity"
+    "url": "https://github.com/oneirosoft/quiddity"
   },
   "version": "0.1.0",
   "description": "Local-first React state helpers with mutator-style updates.",
