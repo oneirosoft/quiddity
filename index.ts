@@ -15,9 +15,34 @@ const pickState = <S extends Record<string, unknown>>(store: S) =>
 
 type StoreBuilder<S extends Record<string, unknown>> = (set: SetState<S>) => S
 
+/**
+ * Create a local store hook from a builder that returns state + actions.
+ *
+ * The builder receives a `set` helper for updating state. Only non-function
+ * keys are treated as state; functions are treated as actions. Each hook call
+ * creates isolated state for the component instance (no shared/global store).
+ *
+ * @example
+ * const useCounter = create((set) => ({
+ *   count: 0,
+ *   inc: () => set((s) => ({ count: s.count + 1 })),
+ * }))
+ */
 export function create<S extends Record<string, unknown>>(
   builder: StoreBuilder<S>
 ): () => S & StateOnly<S>
+/**
+ * Create a local store hook from initial state and an actions builder.
+ *
+ * The `initialState` is used to seed component-local state. The builder
+ * returns action functions that call `set` to produce partial state updates.
+ * Each hook call creates isolated state for the component instance.
+ *
+ * @example
+ * const useCounter = create({ count: 0 }, (set) => ({
+ *   inc: () => set((s) => ({ count: s.count + 1 })),
+ * }))
+ */
 export function create<S extends Record<string, unknown>, A extends Record<string, unknown>>(
   initialState: S,
   builder: (set: SetState<S>) => A

@@ -3,6 +3,10 @@ import { act } from "react"
 import { create } from "react-test-renderer"
 import { create as createStore } from "./index"
 
+declare global {
+  var IS_REACT_ACT_ENVIRONMENT: boolean | undefined
+}
+
 globalThis.IS_REACT_ACT_ENVIRONMENT = true
 
 const ignoredWarnings = new Set([
