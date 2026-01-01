@@ -1,5 +1,6 @@
 {
   "name": "@oneirosoft/quiddity",
+  "url": "https://github.com/quiddity",
   "version": "0.1.0",
   "description": "Local-first React state helpers with mutator-style updates.",
   "main": "./dist/index.cjs",
