@@ -1,0 +1,42 @@
+{
+  "name": "@oneirosoft/quiddity",
+  "version": "0.1.0",
+  "description": "Local-first React state helpers with mutator-style updates.",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "type": "module",
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsup index.ts --format esm,cjs --dts",
+    "test": "bun test",
+    "test:react18": "bun add --no-save -d react@18 react-test-renderer@18 @types/react@18 @types/react-test-renderer@18 && bun test",
+    "test:react19": "bun add --no-save -d react@19 react-test-renderer@19 @types/react@19 @types/react-test-renderer@19 && bun test"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/react": "^18.3.27",
+    "@types/react-test-renderer": "^18.3.1",
+    "react": "^18.3.1",
+    "react-test-renderer": "^18.3.1",
+    "tsup": "^8.5.0",
+    "typescript": "^5.9.3"
+  },
+  "peerDependencies": {
+    "react": "^18.0.0 || ^19.0.0",
+    "typescript": "^5.9.3"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ]
+}
