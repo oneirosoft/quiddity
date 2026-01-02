@@ -14,12 +14,14 @@ bun add @oneirosoft/quiddity
 own isolated state and actions. Updates are always partial merges of state and
 are driven through a `set` function you define inside your actions.
 
-## 🚀 Quick Start (initial state + actions)
+## 🚀 Quick Start
 
 ```ts
 import { create } from "@oneirosoft/quiddity"
 
-const useCounter = create({ count: 0, label: "Clicks" }, (set) => ({
+const useCounter = create((set) => ({
+  count: 0,
+  label: "Clicks",
   inc: (by = 1) => set((state) => ({ count: state.count + by })),
   setLabel: (label: string) => set({ label }),
 }))
@@ -55,10 +57,13 @@ export function Toggle() {
 
 ```ts
 create(builder)
-create(initialState, builder)
+create(builder, derive?)
 
 // builder signature
 type Builder<S> = (set: (update: Partial<S> | ((s: S) => Partial<S>)) => void) => S
+
+// optional derive signature
+type Derive<S, D> = (state: S) => D
 ```
 
 `create` returns a hook:
@@ -77,6 +82,25 @@ const store = useStore()
 - `set` accepts a partial object or an updater function.
 - Updates are merged into current state (shallow merge).
 - Only non-function keys are considered state. Functions are treated as actions.
+
+## 🧮 Derived Values
+
+```ts
+const useCounter = create(
+  (set) => ({
+    count: 0,
+    inc: () => set((s) => ({ count: s.count + 1 })),
+  }),
+  (state) => ({ doubleCount: state.count * 2 })
+)
+
+const store = useCounter()
+// store.doubleCount is a derived value
+```
+
+Derived values are computed from state on render and are read-only. They update
+whenever the underlying state changes, but they do not participate in `set`
+updates directly.
 
 ## 🎯 Rendering Behavior (important)
 

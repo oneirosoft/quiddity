@@ -22,16 +22,17 @@
   },
   "scripts": {
     "build": "tsup index.ts --format esm,cjs --dts",
-    "test": "bun test",
-    "test:react18": "bun add --no-save -d react@18 react-test-renderer@18 @types/react@18 @types/react-test-renderer@18 && bun test",
-    "test:react19": "bun add --no-save -d react@19 react-test-renderer@19 @types/react@19 @types/react-test-renderer@19 && bun test"
+    "test": "bun test --preload ./test/setup.ts",
+    "test:react18": "bun add --no-save -d react@18 react-dom@18 @types/react@18 @types/react-dom@18 && bun test --preload ./test/setup.ts",
+    "test:react19": "bun add --no-save -d react@19 react-dom@19 @types/react@19 @types/react-dom@19 && bun test --preload ./test/setup.ts"
   },
   "devDependencies": {
     "@types/bun": "latest",
     "@types/react": "^18.3.27",
-    "@types/react-test-renderer": "^18.3.1",
+    "@types/react-dom": "^18.3.1",
+    "happy-dom": "^17.6.3",
     "react": "^18.3.1",
-    "react-test-renderer": "^18.3.1",
+    "react-dom": "^18.3.1",
     "tsup": "^8.5.0",
     "typescript": "^5.9.3"
   },

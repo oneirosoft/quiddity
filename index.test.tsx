@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from "bun:test"
 import { act } from "react"
-import { create } from "react-test-renderer"
+import { createRoot } from "react-dom/client"
 import { create as createStore } from "./index"
 
 declare global {
@@ -10,7 +10,6 @@ declare global {
 globalThis.IS_REACT_ACT_ENVIRONMENT = true
 
 const ignoredWarnings = new Set([
-  "react-test-renderer is deprecated.",
   "The current testing environment is not configured to support act(...)",
 ])
 
@@ -58,10 +57,11 @@ const renderHook = <T,>(useHook: () => T) => {
     return null
   }
 
-  let renderer: ReturnType<typeof create> | null = null
+  const container = document.createElement("div")
+  const root = createRoot(container)
 
   act(() => {
-    renderer = create(<Test />)
+    root.render(<Test />)
   })
 
   return {
@@ -69,14 +69,20 @@ const renderHook = <T,>(useHook: () => T) => {
       return latest
     },
     unmount() {
-      renderer?.unmount()
+      act(() => {
+        root.unmount()
+      })
     },
   }
 }
 
 describe("quiddity create", () => {
   it("hydrates initial state and exposes actions", () => {
-    const useStore = createStore({ count: 0 }, (set) => ({
+    const useStore = createStore<{
+      count: number
+      inc: () => void
+    }>((set) => ({
+      count: 0,
       inc: () => set((state) => ({ count: state.count + 1 })),
     }))
 
@@ -89,7 +95,12 @@ describe("quiddity create", () => {
   })
 
   it("applies sync updates from actions", () => {
-    const useStore = createStore({ count: 0 }, (set) => ({
+    const useStore = createStore<{
+      count: number
+      inc: () => void
+      setCount: (count: number) => void
+    }>((set) => ({
+      count: 0,
       inc: () => set((state) => ({ count: state.count + 1 })),
       setCount: (count: number) => set({ count }),
     }))
@@ -112,7 +123,11 @@ describe("quiddity create", () => {
   })
 
   it("handles async updates without stale reads", async () => {
-    const useStore = createStore({ count: 0 }, (set) => ({
+    const useStore = createStore<{
+      count: number
+      delayedInc: (delayMs: number) => Promise<void>
+    }>((set) => ({
+      count: 0,
       delayedInc: async (delayMs: number) => {
         await new Promise((resolve) => setTimeout(resolve, delayMs))
         set((state) => ({ count: state.count + 1 }))
@@ -134,7 +149,13 @@ describe("quiddity create", () => {
   })
 
   it("merges object updates without dropping other state", () => {
-    const useStore = createStore({ count: 0, label: "a" }, (set) => ({
+    const useStore = createStore<{
+      count: number
+      label: string
+      setCount: (count: number) => void
+    }>((set) => ({
+      count: 0,
+      label: "a",
       setCount: (count: number) => set({ count }),
     }))
 
@@ -151,7 +172,11 @@ describe("quiddity create", () => {
   })
 
   it("applies multiple updates from a single action", () => {
-    const useStore = createStore({ count: 0 }, (set) => ({
+    const useStore = createStore<{
+      count: number
+      doubleInc: () => void
+    }>((set) => ({
+      count: 0,
       doubleInc: () => {
         set((state) => ({ count: state.count + 1 }))
         set((state) => ({ count: state.count + 1 }))
@@ -165,6 +190,32 @@ describe("quiddity create", () => {
     })
 
     expect(hook.current.count).toBe(2)
+
+    hook.unmount()
+  })
+
+  it("updates derived state when backing state changes", () => {
+    const useStore = createStore<{
+      count: number
+      inc: () => void
+    }>(
+      (set) => ({
+        count: 1,
+        inc: () => set((state) => ({ count: state.count + 1 })),
+      }),
+      (state) => ({ doubleCount: state.count * 2 })
+    )
+
+    const hook = renderHook(useStore)
+
+    expect(hook.current.doubleCount).toBe(2)
+
+    act(() => {
+      hook.current.inc()
+    })
+
+    expect(hook.current.count).toBe(2)
+    expect(hook.current.doubleCount).toBe(4)
 
     hook.unmount()
   })
