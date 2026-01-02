@@ -219,4 +219,31 @@ describe("quiddity create", () => {
 
     hook.unmount()
   })
+
+  it("exposes derived functions that read latest state", () => {
+    const useStore = createStore<{
+      count: number
+      inc: () => void
+    }>(
+      (set) => ({
+        count: 2,
+        inc: () => set((state) => ({ count: state.count + 1 })),
+      }),
+      (state) => ({
+        multBy: (n: number) => state.count * n,
+      })
+    )
+
+    const hook = renderHook(useStore)
+
+    expect(hook.current.multBy(3)).toBe(6)
+
+    act(() => {
+      hook.current.inc()
+    })
+
+    expect(hook.current.multBy(3)).toBe(9)
+
+    hook.unmount()
+  })
 })
