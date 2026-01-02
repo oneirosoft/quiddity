@@ -1,5 +1,13 @@
 # @oneirosoft/quiddity
 
+[![npm](https://img.shields.io/npm/v/@oneirosoft/quiddity)](https://www.npmjs.com/package/@oneirosoft/quiddity)
+[![npm downloads](https://img.shields.io/npm/dm/@oneirosoft/quiddity?label=downloads)](https://www.npmjs.com/package/@oneirosoft/quiddity)
+[![types](https://img.shields.io/npm/types/@oneirosoft/quiddity)](https://www.npmjs.com/package/@oneirosoft/quiddity)
+[![license](https://img.shields.io/github/license/oneirosoft/quiddity)](https://github.com/oneirosoft/quiddity/blob/main/LICENSE)
+[![bundle size](https://img.shields.io/bundlephobia/minzip/@oneirosoft/quiddity)](https://bundlephobia.com/package/@oneirosoft/quiddity)
+[![CI](https://img.shields.io/github/actions/workflow/status/oneirosoft/quiddity/ci.yml?branch=main&label=tests)](https://github.com/oneirosoft/quiddity/actions/workflows/ci.yml)
+[![Publish](https://img.shields.io/github/actions/workflow/status/oneirosoft/quiddity/publish.yml?label=publish)](https://github.com/oneirosoft/quiddity/actions/workflows/publish.yml)
+
 Local-first React state helpers that keep the API small and the updates clear.
 
 ## 📦 Install
@@ -101,6 +109,24 @@ const store = useCounter()
 Derived values are computed from state on render and are read-only. They update
 whenever the underlying state changes, but they do not participate in `set`
 updates directly.
+
+You can also return functions from `derive`:
+
+```ts
+const useMath = create(
+  (set) => ({
+    count: 0,
+    inc: () => set((s) => ({ count: s.count + 1 })),
+  }),
+  (state) => ({
+    doubleCount: state.count * 2,
+    multBy: (n: number) => state.count * n,
+  })
+)
+
+const store = useMath()
+store.multBy(3) // uses the latest state
+```
 
 ## 🎯 Rendering Behavior (important)
 
