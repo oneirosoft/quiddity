@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from "bun:test"
 import { act } from "react"
 import { createRoot } from "react-dom/client"
-import { create as createStore } from "./index"
+import { combine, create as createStore } from "./index"
 
 declare global {
   var IS_REACT_ACT_ENVIRONMENT: boolean | undefined
@@ -195,10 +195,13 @@ describe("quiddity create", () => {
   })
 
   it("updates derived state when backing state changes", () => {
-    const useStore = createStore<{
-      count: number
-      inc: () => void
-    }>(
+    const useStore = createStore<
+      {
+        count: number
+        inc: () => void
+      },
+      { doubleCount: number }
+    >(
       (set) => ({
         count: 1,
         inc: () => set((state) => ({ count: state.count + 1 })),
@@ -221,10 +224,13 @@ describe("quiddity create", () => {
   })
 
   it("exposes derived functions that read latest state", () => {
-    const useStore = createStore<{
-      count: number
-      inc: () => void
-    }>(
+    const useStore = createStore<
+      {
+        count: number
+        inc: () => void
+      },
+      { multBy: (n: number) => number }
+    >(
       (set) => ({
         count: 2,
         inc: () => set((state) => ({ count: state.count + 1 })),
@@ -243,6 +249,93 @@ describe("quiddity create", () => {
     })
 
     expect(hook.current.multBy(3)).toBe(9)
+
+    hook.unmount()
+  })
+
+  it("infers state and actions with combine", () => {
+    const useStore = createStore(
+      combine({ count: 0 }, (set) => ({
+        inc: () => set((state) => ({ count: state.count + 1 })),
+        setCount: (count: number) => set({ count }),
+      }))
+    )
+
+    const hook = renderHook(useStore)
+
+    expect(hook.current.count).toBe(0)
+
+    act(() => {
+      hook.current.inc()
+    })
+
+    expect(hook.current.count).toBe(1)
+
+    act(() => {
+      hook.current.setCount(5)
+    })
+
+    expect(hook.current.count).toBe(5)
+
+    hook.unmount()
+  })
+
+  it("infers derived values with combine", () => {
+    const useStore = createStore(
+      combine({ count: 2 }, (set) => ({
+        inc: () => set((state) => ({ count: state.count + 1 })),
+      })),
+      (state) => ({ doubleCount: state.count * 2 })
+    )
+
+    const hook = renderHook(useStore)
+
+    expect(hook.current.doubleCount).toBe(4)
+
+    act(() => {
+      hook.current.inc()
+    })
+
+    expect(hook.current.doubleCount).toBe(6)
+
+    hook.unmount()
+  })
+
+  it("merges combine state and actions", () => {
+    const useStore = createStore(
+      combine({ count: 0, label: "ok" }, (set) => ({
+        setLabel: (label: string) => set({ label }),
+      }))
+    )
+
+    const hook = renderHook(useStore)
+
+    expect(hook.current.count).toBe(0)
+    expect(hook.current.label).toBe("ok")
+
+    act(() => {
+      hook.current.setLabel("next")
+    })
+
+    expect(hook.current.label).toBe("next")
+
+    hook.unmount()
+  })
+
+  it("supports object updates with combine", () => {
+    const useStore = createStore(
+      combine({ count: 0 }, (set) => ({
+        setCount: (count: number) => set({ count }),
+      }))
+    )
+
+    const hook = renderHook(useStore)
+
+    act(() => {
+      hook.current.setCount(12)
+    })
+
+    expect(hook.current.count).toBe(12)
 
     hook.unmount()
   })

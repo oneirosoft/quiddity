@@ -1,8 +1,12 @@
 import { Window } from "happy-dom"
 
 const window = new Window()
+const globalScope = globalThis as unknown as {
+  window: Window
+  document: Document
+  navigator: Navigator
+}
 
-globalThis.window = window
-globalThis.document = window.document
-globalThis.navigator = window.navigator
-
+globalScope.window = window
+globalScope.document = window.document as unknown as Document
+globalScope.navigator = window.navigator as unknown as Navigator

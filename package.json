@@ -25,7 +25,8 @@
     "build": "tsup index.ts --format esm,cjs --dts",
     "test": "bun test --preload ./test/setup.ts",
     "test:react18": "bun add --no-save -d react@18 react-dom@18 @types/react@18 @types/react-dom@18 && bun test --preload ./test/setup.ts",
-    "test:react19": "bun add --no-save -d react@19 react-dom@19 @types/react@19 @types/react-dom@19 && bun test --preload ./test/setup.ts"
+    "test:react19": "bun add --no-save -d react@19 react-dom@19 @types/react@19 @types/react-dom@19 && bun test --preload ./test/setup.ts",
+    "test:all": "bun run test:react18; bun run test:react19"
   },
   "devDependencies": {
     "@types/bun": "latest",

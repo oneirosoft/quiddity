@@ -8,14 +8,34 @@ type SetState<S> = (
   update: Partial<StateOnly<S>> | ((state: StateOnly<S>) => Partial<StateOnly<S>>)
 ) => void
 
+type Derive<S extends Record<string, unknown>, D extends Record<string, unknown>> = (
+  state: StateOnly<S>
+) => D
+
 const pickState = <S extends Record<string, unknown>>(store: S) =>
   Object.entries(store)
     .filter(([, value]) => typeof value !== "function")
     .reduce((acc, [key, value]) => ({ ...acc, [key]: value }), {} as StateOnly<S>)
 
-type Derive<S extends Record<string, unknown>, D extends Record<string, unknown>> = (
-  state: StateOnly<S>
-) => D
+/**
+ * Build a store builder by combining plain state with action creators.
+ *
+ * @example
+ * const useCounter = create(
+ *   combine({ count: 0 }, (set) => ({
+ *     inc: () => set((s) => ({ count: s.count + 1 })),
+ *   }))
+ * )
+ */
+export const combine = <
+  S extends Record<string, unknown>,
+  A extends Record<string, unknown>
+>(
+  state: S,
+  actions: (set: SetState<S>) => A
+) => {
+  return (set: SetState<S>) => ({ ...state, ...actions(set) })
+}
 
 /**
  * Create a local store hook from a builder that returns state + actions.
@@ -40,21 +60,21 @@ type Derive<S extends Record<string, unknown>, D extends Record<string, unknown>
  */
 export function create<S extends Record<string, unknown>>(
   builder: (set: SetState<S>) => S
-): () => S & StateOnly<S>
+): () => S
 export function create<
   S extends Record<string, unknown>,
   D extends Record<string, unknown>
 >(
   builder: (set: SetState<S>) => S,
   derive: Derive<S, D>
-): () => S & StateOnly<S> & D
+): () => S & D
 export function create<
   S extends Record<string, unknown>,
   D extends Record<string, unknown>
 >(
   arg1: (set: SetState<S>) => S,
   arg2?: Derive<S, D>
-) {
+): () => S & D {
   return () => {
     const setRef = useRef<((update: Parameters<SetState<S>>[0]) => void) | null>(null)
     const storeRef = useRef<S | null>(null)
@@ -79,12 +99,12 @@ export function create<
       })
     }
 
-    const derived = arg2 ? arg2(state) : null
+    const derived = arg2?.(state)
 
     return {
       ...storeRef.current,
       ...state,
       ...(derived ?? {}),
-    } as S & StateOnly<S>
+    } as S & D
   }
 }

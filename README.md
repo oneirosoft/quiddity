@@ -45,6 +45,37 @@ export function Counter() {
 }
 ```
 
+TypeScript tip:
+
+```ts
+type CounterStore = {
+  count: number
+  label: string
+  inc: (by?: number) => void
+  setLabel: (label: string) => void
+}
+
+const useCounter = create<CounterStore>((set) => ({
+  count: 0,
+  label: "Clicks",
+  inc: (by = 1) => set((state) => ({ count: state.count + by })),
+  setLabel: (label) => set({ label }),
+}))
+```
+
+`combine` helper:
+
+```ts
+import { combine, create } from "@oneirosoft/quiddity"
+
+const useCounter = create(
+  combine({ count: 0 }, (set) => ({
+    inc: () => set((state) => ({ count: state.count + 1 })),
+    setCount: (count: number) => set({ count }),
+  }))
+)
+```
+
 ## 🧩 Object-Only Store (state + actions together)
 
 ```ts
