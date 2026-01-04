@@ -16,6 +16,12 @@ Local-first React state helpers that keep the API small and the updates clear.
 bun add @oneirosoft/quiddity
 ```
 
+or
+
+```bash
+npm install @oneirosoft/quiddity
+```
+
 ## 🧠 Core Idea
 
 `create` builds a local store hook. Each component that calls the hook gets its
@@ -75,6 +81,10 @@ const useCounter = create(
   }))
 )
 ```
+
+Use `combine` when you want a clean separation between plain initial state and
+action creators, while still getting good inference in the builder. It keeps
+your initial state visible and avoids repeating fields inside actions.
 
 ## 🧩 Object-Only Store (state + actions together)
 
