@@ -12,10 +12,20 @@ type Derive<S extends Record<string, unknown>, D extends Record<string, unknown>
   state: StateOnly<S>
 ) => D
 
+type NoOverlap<A extends Record<string, unknown>, B extends Record<string, unknown>> =
+  keyof A & keyof B extends never ? A : never
+
 const pickState = <S extends Record<string, unknown>>(store: S) =>
   Object.entries(store)
     .filter(([, value]) => typeof value !== "function")
     .reduce((acc, [key, value]) => ({ ...acc, [key]: value }), {} as StateOnly<S>)
+
+const assertNoOverlap = (label: string, base: string[], next: string[]) => {
+  const overlap = next.filter((key) => base.includes(key))
+  if (overlap.length > 0) {
+    throw new Error(`${label} keys overlap: ${overlap.join(", ")}`)
+  }
+}
 
 /**
  * Build a store builder by combining plain state with action creators.
@@ -32,9 +42,17 @@ export const combine = <
   A extends Record<string, unknown>
 >(
   state: S,
-  actions: (set: SetState<S>) => A
+  actions: (set: SetState<S>) => NoOverlap<A, S>
 ) => {
-  return (set: SetState<S>) => ({ ...state, ...actions(set) })
+  return (set: SetState<S>) => {
+    const actionBag = actions(set)
+    assertNoOverlap(
+      "combine",
+      Object.keys(state),
+      Object.keys(actionBag as Record<string, unknown>)
+    )
+    return { ...state, ...actionBag }
+  }
 }
 
 /**
@@ -66,18 +84,19 @@ export function create<
   D extends Record<string, unknown>
 >(
   builder: (set: SetState<S>) => S,
-  derive: Derive<S, D>
+  derive: Derive<S, NoOverlap<D, S>>
 ): () => S & D
 export function create<
   S extends Record<string, unknown>,
   D extends Record<string, unknown>
 >(
   arg1: (set: SetState<S>) => S,
-  arg2?: Derive<S, D>
+  arg2?: Derive<S, NoOverlap<D, S>>
 ): () => S & D {
   return () => {
     const setRef = useRef<((update: Parameters<SetState<S>>[0]) => void) | null>(null)
     const storeRef = useRef<S | null>(null)
+    const actionKeysRef = useRef<string[]>([])
 
     const [state, setState] = useState<StateOnly<S>>(() => {
       const set: SetState<S> = (update) => {
@@ -88,6 +107,9 @@ export function create<
       }
 
       const store = arg1(set)
+      actionKeysRef.current = Object.entries(store)
+        .filter(([, value]) => typeof value === "function")
+        .map(([key]) => key)
       storeRef.current = store
       return pickState(store)
     })
@@ -100,6 +122,13 @@ export function create<
     }
 
     const derived = arg2?.(state)
+    if (derived) {
+      assertNoOverlap(
+        "derive",
+        [...Object.keys(state), ...actionKeysRef.current],
+        Object.keys(derived)
+      )
+    }
 
     return {
       ...storeRef.current,

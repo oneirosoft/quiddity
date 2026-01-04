@@ -131,6 +131,8 @@ const store = useStore()
 - `set` accepts a partial object or an updater function.
 - Updates are merged into current state (shallow merge).
 - Only non-function keys are considered state. Functions are treated as actions.
+- State, action, and derived keys must be unique. Overlaps are rejected by
+  TypeScript and also throw at runtime.
 
 ## 🧮 Derived Values
 

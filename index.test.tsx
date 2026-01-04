@@ -339,4 +339,34 @@ describe("quiddity create", () => {
 
     hook.unmount()
   })
+
+  it("throws when combine actions overlap state keys", () => {
+    // @ts-expect-error overlap should be rejected by types, but test runtime too
+    const useStore = createStore(
+      combine({ count: 0 }, (set) => ({
+        count: () => set({ count: 1 }),
+      }))
+    )
+
+    expect(() => renderHook(useStore)).toThrow(
+      "combine keys overlap: count"
+    )
+  })
+
+  it("throws when derived keys overlap state or actions", () => {
+    // @ts-expect-error overlap should be rejected by types, but test runtime too
+    const useStore = createStore(
+      (set) => ({
+        count: 0,
+        inc: () => set((state) => ({ count: state.count + 1 })),
+      }),
+      (state) => ({
+        count: state.count + 1,
+      })
+    )
+
+    expect(() => renderHook(useStore)).toThrow(
+      "derive keys overlap: count"
+    )
+  })
 })
